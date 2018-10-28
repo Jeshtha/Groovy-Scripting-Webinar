@@ -1,0 +1,116 @@
+//Logging in groovy  
+log.info "Welcome Everyone!"
+ 
+//Logging with a variable  
+def where = " to SmartBear Connect!"
+log.info "Welcome Everyone" + where  
+
+// get custom properties from testCase, testSuite and project via Groovy Script Teststep  
+def testCaseProperty = testRunner.testCase.getPropertyValue( "testCaseCustomProp" )  
+def testSuiteProperty = testRunner.testCase.testSuite.getPropertyValue( " testSuiteCustomProp " )  
+def projectProperty = testRunner.testCase.testSuite.project.getPropertyValue( " projectCustomProp " )  
+def globalProperty = com.eviware.soapui.SoapUI.globalProperties.getPropertyValue( "globalProp" )  
+ 
+// setting custom properties  
+testRunner.testCase.setPropertyValue( "MyProp", someValue )  
+testRunner.testCase.testSuite.setPropertyValue( "MyProp", someValue )  
+testRunner.testCase.testSuite.project.setPropertyValue( "MyProp", someValue )   
+com.eviware.soapui.SoapUI.globalProperties.setPropertyValue( "MyProp", someValue ) 
+
+
+//Get all methods for object  
+log.info testRunner.metaClass.methods*.name  
+// log.info ObjectName.metaClass.methods*.name 
+
+
+//Assertion
+def totalCount = Integer.parseInt(context.expand( '${Request 1#Response#$[\'totalItems\']}' ))
+
+if (totalCount >= 1330 && totalCount <=2000){
+	assert 1==1
+}
+else{
+	log.info "Value is "+totalCount
+}
+
+//CDATA
+//Eventhandler RequestFilter.afterRequest 
+def content = context.httpResponse.responseContent 
+content = content.replaceAll( "<!\\[CDATA\\[", "" ) 
+content = content.replaceAll( "]]>", "" ) 
+ 
+//log.info( content ) 
+context.httpResponse.responseContent = content 
+
+//Run testCase
+testRunner.testCase.testSuite.project.getTestSuiteByName("TESTSUITE NAME").getTestCaseByName("TESTCASE NAME").run(null, false) 
+
+//Run testSuite
+testRunner.testCase.testSuite.project.getTestSuiteByName("TESTSUITE NAME").run(null, false)
+
+//Run testStep
+testRunner.testCase.getTestStepByName("TestStepName").run(testRunner, context) 
+
+//Set Active Environment
+project.setActiveEnvironment("Default Environment")
+
+
+//Conditional flow
+def response = context.expand( '${Main Condition Request#Response}' )
+log.info response
+
+if (response == "California"){
+	testRunner.testCase.getTestStepByName("California").setDisabled(false)
+	log.info "Run California"
+}
+
+else if (response == "Boston"){
+	testRunner.testCase.getTestStepByName("Massachusetts").setDisabled(false)
+	log.info "Run Massachusetts"
+}
+
+
+//Run project
+WsdlProjectPro project1 = new WsdlProjectPro("C:\\Users\\Desktop\\CurrencyConvertorLoadTEST-soapui-project.xml(ProjectPATH)")
+project1.getTestSuiteByName("NAME").getTestCaseByName("NAME").run(null,false)
+
+//Calling custom groovy script import soapui.demo.Greet  
+Greet g= new Greet("AnyName", log)  
+g.salute()  
+ 
+
+
+//json slurper  
+import groovy.json.JsonSlurper  
+ 
+def slurper = new groovy.json.JsonSlurper()  
+def result = slurper.parseText('GetDATA for response')   
+assert result.person.name == "Tom"   
+assert result.person.age == 33   
+assert result.person.pets.size() == 2   
+assert result.person.pets[0] == "dog"   
+assert result.person.pets[1] == "cat"  
+ 
+ 
+//XMLSlurper, 
+Import groovy.util.XmlSlurper 
+def rootNode = new XmlSlurper().parseText('GetDATA for response') 
+ 
+assert rootNode.name() == 'root'
+assert rootNode.one[0].@a1 == 'uno!'
+assert rootNode.two.text() == 'Some text!'
+rootNode.children().each { 
+	assert it.name() in ['one','two'] 
+} 
+
+
+References, 
+API Docs:http://www.soapui.org/apidocs/overview-summary.html  
+Quick Tricks: https://www.soapui.org/scripting-properties/tips-tricks.html 
+Events: https://support.smartbear.com/readyapi/docs/testing/handling-events.html  
+https://www.soapui.org/functional-testing/working-with-cdata.html#6-An-EventHandlerto-the-Rescue  
+http://docs.groovy-lang.org/latest/html/api/groovy/util/XmlSlurper.html 
+http://docs.groovy-lang.org/latest/html/gapi/groovy/json/JsonSlurper.html 
+ 
+ 
+
